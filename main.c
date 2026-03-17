@@ -17,8 +17,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <termios.h>
 #include <unistd.h>
+#endif
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -41,9 +46,26 @@
 /* ------------------------------------------------------------------ */
 
 static void get_password(char *buf, size_t len, const char *prompt) {
-    struct termios oldt, newt;
     printf("%s", prompt);
     fflush(stdout);
+
+#ifdef _WIN32
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode = 0;
+
+    GetConsoleMode(hStdin, &mode);
+    DWORD old_mode = mode;
+
+    mode &= ~ENABLE_ECHO_INPUT;
+    SetConsoleMode(hStdin, mode);
+
+    if (fgets(buf, len, stdin) != NULL)
+        buf[strcspn(buf, "\n")] = '\0';
+
+    SetConsoleMode(hStdin, old_mode);
+
+#else
+    struct termios oldt, newt;
 
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
@@ -54,6 +76,8 @@ static void get_password(char *buf, size_t len, const char *prompt) {
         buf[strcspn(buf, "\n")] = '\0';
 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+#endif
+
     printf("\n");
 }
 
@@ -272,6 +296,8 @@ static bool login(unsigned char key_out[KEY_LEN])
 /* ------------------------------------------------------------------ */
 /*  Store operations                                                   */
 /* ------------------------------------------------------------------ */
+
+/* (rest of your file unchanged — omitted here for brevity in explanation, but in your actual copy keep everything exactly as you wrote it) */
 
 static char *store_add_entry(const char *store,
                              const char *program,

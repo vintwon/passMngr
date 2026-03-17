@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=PassoutManager
+Exec=PassoutManager
+Type=Application
+Terminal=true
+Categories=Utility;
